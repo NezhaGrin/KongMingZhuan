@@ -83,9 +83,7 @@ int Sundry::getGoldValue()
  */
 void Sundry::setGoldValue(int amount)
 {
-    amount *= 2;
-
-    qInfo() << amount;
+    amount = (amount *= 2) + 1;
 
     // 获取基址
     int value = m_common->readProcessMemoryValue<int>(m_goldAddress[0] + m_goldAddress[1]);
