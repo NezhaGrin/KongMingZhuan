@@ -16,18 +16,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     setWindowIcon(QIcon(":/images/1.jpg"));
 
-    m_goldTimerId = startTimer(1000);
-
-    ui->lineEditGold->installEventFilter(this);
-
     try {
         m_sundry = Sundry::getInstance();
 
         getGoldValue();
     }  catch (RuntimeException &runtime) {
-
         QMessageBox::critical(this,"Error",runtime.getMessage());
     }
+
+    m_goldTimerId = startTimer(1000);
+
+    ui->lineEditGold->installEventFilter(this);
 }
 
 void MainWindow::getGoldValue()
@@ -38,9 +37,13 @@ void MainWindow::getGoldValue()
 
 void MainWindow::timerEvent(QTimerEvent *e)
 {
-    if (e->timerId() == m_goldTimerId)
-    {
-        getGoldValue();
+    try {
+        if (e->timerId() == m_goldTimerId)
+        {
+            getGoldValue();
+        }
+    }  catch (RuntimeException &runtime) {
+        qDebug() << runtime.getMessage();
     }
 }
 
@@ -66,13 +69,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
 }
 
 void MainWindow::on_lineEditGold_editingFinished()
-{   
+{
     if (!m_goldTimerId)
     {
         m_goldTimerId = startTimer(1000);
     }
 
-    m_sundry->setGoldValue(ui->lineEditGold->text().toInt());
+    try {
+        m_sundry->setGoldValue(ui->lineEditGold->text().toInt());
+    } catch (RuntimeException &runtime) {
+        qDebug() << runtime.getMessage();
+    }
 }
 
 MainWindow::~MainWindow()

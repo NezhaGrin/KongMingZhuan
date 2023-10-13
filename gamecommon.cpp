@@ -1,6 +1,7 @@
 #include "gamecommon.h"
 
 GameCommon::GameCommon(QObject *parent) : QObject(parent)
+  , m_processHandle(nullptr)
 {
 
 }
@@ -13,7 +14,7 @@ GameCommon::GameCommon(QObject *parent) : QObject(parent)
  *
  * @return 进程句柄
  */
-HANDLE GameCommon::getProcessHandle(LPCSTR className,LPCSTR windowName)
+void GameCommon::getProcessHandle(LPCSTR className,LPCSTR windowName)
 {
     HWND windowHandle = FindWindowA(className,windowName);
 
@@ -30,12 +31,56 @@ HANDLE GameCommon::getProcessHandle(LPCSTR className,LPCSTR windowName)
         throw RuntimeException("获取窗口进程标识失败!");
     }
 
-    HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS,false,processId);
+    m_processHandle = OpenProcess(PROCESS_ALL_ACCESS,false,processId);
 
-    if (!processHandle)
+    if (!m_processHandle)
     {
         throw RuntimeException("打开进程句柄失败!");
     }
+}
 
-    return processHandle;
+/**
+ * @brief 获取模块基址
+ *
+ * @param[in] moduleNameS 模块名称
+ *
+ * @return 模块基址
+ */
+int GameCommon::getModuleBaseAddress(const QString &moduleNameS)
+{
+    // 模块信息的字节数
+    DWORD cbNeeded;
+
+    // 加载的模块句柄的数组
+    HMODULE hModules[1024];
+
+    // 检索指定进程中满足指定筛选条件的每个模块的句柄，只检索 32 位的
+    EnumProcessModulesEx(m_processHandle, hModules, sizeof(hModules), &cbNeeded, LIST_MODULES_32BIT) ?: throw RuntimeException("检索进程模块句柄失败!");
+
+    // 模块基址
+    int moduleBaseAddress = 0;
+
+    // 模块数量
+    int moduleCount = cbNeeded / sizeof(HMODULE);
+
+    // 遍历每个加载的模块
+    for (int i = 0; i < moduleCount; i++)
+    {
+        TCHAR moduleName[MAX_PATH];
+
+        // 获取模块的文件名
+        if (GetModuleBaseName(m_processHandle, hModules[i], moduleName, sizeof(moduleName) / sizeof(TCHAR)))
+        {
+            // 转换为宽字符串
+            QString moduleNameQt = QString::fromWCharArray(moduleName);
+
+            // 检查模块名是否匹配，不区分大小写
+            if (moduleNameQt.compare(moduleNameS, Qt::CaseInsensitive) == 0) {
+                moduleBaseAddress = (DWORD_PTR)hModules[i];
+                break;
+            }
+        }
+    }
+
+    return moduleBaseAddress;
 }

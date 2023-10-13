@@ -32,9 +32,6 @@ private:
     // 游戏公共接口
     GameCommon *m_common;
 
-    // 进程句柄
-    HANDLE m_processHandel;
-
     // 金币地址
     QVector<int> m_goldAddress;
 

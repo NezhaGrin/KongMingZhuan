@@ -1,6 +1,7 @@
 #include "sundry.h"
 #include "runtimeexception.h"
 #include <QDebug>
+
 /**
  * @brief 互斥锁
  */
@@ -15,9 +16,7 @@ Sundry *Sundry::m_instance = nullptr;
  * @brief 构造函数
  */
 Sundry::Sundry(QObject *parent) : QObject(parent)
-  , m_common(nullptr)
-  , m_processHandel(nullptr)
-  , m_goldAddress({0x0EAEC044, 0x0C, 0x0, 0x10, 0x10, 0x08, 0x0, 0x04, 0x0C, 0x14})
+  , m_goldAddress({0X2AC044, 0x0C, 0x0, 0x10, 0x10, 0x08, 0x0, 0x04, 0x0C, 0x14})
 {
     m_common = new GameCommon(this);
 }
@@ -27,13 +26,16 @@ Sundry::Sundry(QObject *parent) : QObject(parent)
  */
 void Sundry::initialize()
 {
-    m_processHandel = m_processHandel ?: m_common->getProcessHandle("TWKPLAYER");
+    m_common->getProcessHandle("TWKPLAYER");
+
+    // rgss300.dll 模块地址
+    m_goldAddress.prepend(m_common->getModuleBaseAddress("rgss300.dll"));
 }
 
 /**
  * @brief 单列模式
  *
- * @return
+ * @return 实例化
  */
 Sundry *Sundry::getInstance()
 {
@@ -60,14 +62,15 @@ Sundry *Sundry::getInstance()
  */
 int Sundry::getGoldValue()
 {
-    // 第一个是基址
-    int value = m_common->readProcessMemoryValue<int>(m_processHandel,m_goldAddress.first());
+    QMutexLocker lock(&m_mutex);
+
+    // 获取基址
+    int value = m_common->readProcessMemoryValue<int>(m_goldAddress[0] + m_goldAddress[1]);
 
     // 基址 + 偏移
-    for (int i = 1; i < m_goldAddress.size(); i++)
+    for (int i = 2; i < m_goldAddress.size(); i++)
     {
-        value += m_goldAddress[i];
-        value = m_common->readProcessMemoryValue<int>(m_processHandel,value);
+        value = m_common->readProcessMemoryValue<int>(value + m_goldAddress[i]);
     }
 
     return value / 2;
@@ -80,23 +83,23 @@ int Sundry::getGoldValue()
  */
 void Sundry::setGoldValue(int amount)
 {
-//    amount *= 2;
+    amount = (amount *= 2) + 1;
 
-//    // 第一个是基址
-//    int value = m_common->readProcessMemoryValue<int>(m_processHandel,m_goldAddress.first());
+    // 获取基址
+    int value = m_common->readProcessMemoryValue<int>(m_goldAddress[0] + m_goldAddress[1]);
 
-//    // 基址 + 偏移
-//    for (int i = 1; i < m_goldAddress.size(); i++)
-//    {
-//        if (i == m_goldAddress.size() - 1)
-//        {
-//            value += m_goldAddress[i];
-//        }
-//        else
-//        {
-//            value = m_common->readProcessMemoryValue<int>(m_processHandel,value + m_goldAddress[i]);
-//        }
-//    }
+    // 基址 + 偏移
+    for (int i = 2; i < m_goldAddress.size(); i++)
+    {
+        if (i == m_goldAddress.size() - 1)
+        {
+            value += m_goldAddress[i];
+        }
+        else
+        {
+            value = m_common->readProcessMemoryValue<int>(value + m_goldAddress[i]);
+        }
+    }
 
-//    m_common->writeProcessMemoryValue<int>(m_processHandel,value,&amount);
+    m_common->writeProcessMemoryValue<int>(value,&amount);
 }
