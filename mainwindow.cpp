@@ -58,7 +58,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
         return true;
     }
 
-    if (obj == ui->lineEditGold && e->type() == QEvent::Enter && !m_goldTimerId)
+    if (obj == ui->lineEditGold && e->type() == QEvent::Leave && !m_goldTimerId)
     {
         m_goldTimerId = startTimer(1000);
 
