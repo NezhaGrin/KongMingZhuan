@@ -22,6 +22,11 @@ public:
     // 设置金币
     void setGoldValue(int amount);
 
+    // 获取练兵值
+    int getTrainingValue();
+
+    void test();
+
 private:
     // 实例互存锁4
     static QMutex m_mutex;
@@ -34,6 +39,12 @@ private:
 
     // 金币地址
     QVector<int> m_goldAddress;
+
+    // 练兵值地址
+    QVector<int> m_trainingAddress;
+
+
+    QVector<int> m_test;
 
     // 构造函数声明为私有，确保只能在类内部创建对象
     Sundry(QObject *parent = nullptr);

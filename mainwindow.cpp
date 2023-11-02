@@ -20,13 +20,18 @@ MainWindow::MainWindow(QWidget *parent)
         m_sundry = Sundry::getInstance();
 
         getGoldValue();
+
+        getTrainingValue();
+
+        m_sundry->test();
+
+        m_goldTimerId   = startTimer(1000);
+        m_sundryTimerId = startTimer(1000);
+
+        ui->lineEditGold->installEventFilter(this);
     }  catch (RuntimeException &runtime) {
         QMessageBox::critical(this,"Error",runtime.getMessage());
     }
-
-    m_goldTimerId = startTimer(1000);
-
-    ui->lineEditGold->installEventFilter(this);
 }
 
 void MainWindow::getGoldValue()
@@ -35,12 +40,24 @@ void MainWindow::getGoldValue()
     ui->lineEditGold->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
 }
 
+void MainWindow::getTrainingValue()
+{
+    ui->lineEditTraining->setText(QString::number(m_sundry->getTrainingValue()));
+    ui->lineEditTraining->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    ui->lineEditTraining->setReadOnly(true);
+}
+
 void MainWindow::timerEvent(QTimerEvent *e)
 {
     try {
         if (e->timerId() == m_goldTimerId)
         {
             getGoldValue();
+        }
+
+        if (e->timerId() == m_goldTimerId)
+        {
+            getTrainingValue();
         }
     }  catch (RuntimeException &runtime) {
         qDebug() << runtime.getMessage();

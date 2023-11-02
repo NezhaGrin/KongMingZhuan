@@ -24,6 +24,9 @@ private:
     // 获取金币值
     void getGoldValue();
 
+    // 获取练兵值
+    void getTrainingValue();
+
     // 重新定时器事件
     void timerEvent(QTimerEvent *e);
 
@@ -34,6 +37,8 @@ private:
     Sundry *m_sundry;
 
     int m_goldTimerId;
+
+    int m_sundryTimerId;
 
     Ui::MainWindow *ui;
 };

@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <Tlhelp32.h>
 #include <Psapi.h>
+#include <QDebug>
 
 #include "runtimeexception.h"
 
@@ -24,26 +25,26 @@ public:
     /**
      * @brief 读取内存值
      *
-     * @param[in] address 内存地址
+     * @param[in] address  地址
+     * @param[in] sizeByte 读取字节数
      *
-     * @return 读取的值
+     * @return 纯内存的值或是内存地址
      */
     template<typename T>
-    int readProcessMemoryValue(T address)
+    T readProcessMemoryValue(int address,size_t sizeByte = sizeof (T))
     {
-        int value = 0;
+        T value;
 
-        ReadProcessMemory(m_processHandle,(LPCVOID &)address,&value,sizeof (T),NULL) ?: throw RuntimeException("读取数据失败!");
+        ReadProcessMemory(m_processHandle,(LPCVOID &)address,&value,sizeByte,NULL) ?: throw RuntimeException("读取数据失败!");
 
         return value;
     }
 
+    // 读取内存值转字符串
+    char *readProcessMemoryValueToChar(int address,size_t sizeByte);
 
-    template<typename T>
-    void writeProcessMemoryValue(T address,LPCVOID value)
-    {
-        WriteProcessMemory(m_processHandle,(LPVOID&)address,value,sizeof (T),NULL) ?: throw RuntimeException("写入数据失败!");
-    }
+    // 写入内存值
+    void writeProcessMemoryValue(int address,LPCVOID value,size_t sizeByte = 4);
 
 private:
     // 进程句柄

@@ -84,3 +84,36 @@ int GameCommon::getModuleBaseAddress(const QString &moduleNameS)
 
     return moduleBaseAddress;
 }
+
+/**
+ * @brief 读取内存值转字符串
+ *
+ * @param[in] address  地址
+ * @param[in] sizeByte 读取字节数
+ *
+ * @return 字符串
+ */
+char *GameCommon::readProcessMemoryValueToChar(int address,size_t sizeByte)
+{
+    char *value = new char[++sizeByte];
+
+    if (!ReadProcessMemory(m_processHandle,(LPCVOID &)address,value,sizeByte,NULL))
+    {
+        delete [] value;
+        throw RuntimeException("读取数据失败!");
+    }
+
+    return value;
+}
+
+/**
+ * @brief 写入内存值
+ *
+ * @param[in] address  地址
+ * @param[in] value    写入的值
+ * @param[in] sizeByte 写入的字节数
+ */
+void GameCommon::writeProcessMemoryValue(int address, LPCVOID value, size_t sizeByte)
+{
+    WriteProcessMemory(m_processHandle,(LPVOID&)address,value,sizeByte,NULL) ?: throw RuntimeException("写入数据失败!");
+}
